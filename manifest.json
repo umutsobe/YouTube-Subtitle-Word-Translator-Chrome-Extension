@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouTube Subtitle Word Translator",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Open English or other language subtitles on YouTube, find unfamiliar words? Click, translate to your chosen language.",
   "permissions": ["storage", "activeTab"],
   "background": {

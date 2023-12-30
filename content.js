@@ -145,12 +145,12 @@ chrome.storage.sync.get("targetLang", function (result) {
   console.log("Hedef dil: " + targetLang);
 });
 
-function splitSentence(element) {
+function splitContentIntoWords(element) {
   let notSplittedContent = "";
   element.childNodes.forEach((spanOrText) => {
     if (spanOrText.nodeName == "#text") {
       notSplittedContent += spanOrText.textContent + " ";
-      spanOrText.textContent = "";
+      spanOrText.textContent = undefined;
     }
   });
 
@@ -171,13 +171,14 @@ function splitSentence(element) {
   }
 }
 
+//word sentence detection
 setInterval(() => {
   const elements = document.querySelectorAll(".ytp-caption-segment");
   if (elements) {
     elements.forEach((element) => {
       element.childNodes.forEach((spanOrText) => {
         if (spanOrText.nodeName == "#text") {
-          splitSentence(element);
+          splitContentIntoWords(element);
         }
       });
     });
@@ -369,9 +370,7 @@ async function translateWord(word) {
   }
 }
 
-function startInterval() {}
-
-//////////////////////////////////////////////////////////////////////////////dil değiştirme
+//change language
 
 async function languageSelect(selectedLangCode) {
   const languageSelect = document.getElementById("targetLang");
