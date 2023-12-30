@@ -141,6 +141,7 @@ let mutatedElement; //mutosyona uğrayan element. bazen cümle ayrışmıyor. vi
 let popupElement; // element dışında bir yere tıklanınca popup kapansın diye
 let targetLang;
 let activeWordElement;
+let intervalIdd;
 
 chrome.storage.sync.get("targetLang", function (result) {
   targetLang = result.targetLang; // varsayılan değeri belirle
@@ -178,6 +179,21 @@ var observer = new MutationObserver(function (mutations) {
         if (element.classList && element.classList.contains("ytp-caption-segment")) {
           splitSentence(element);
           mutatedElement = element;
+          const intervalId = setInterval(() => {
+            intervalIdd = intervalId;
+
+            const originalText = element.textContent;
+            const segmenter = new Intl.Segmenter([], { granularity: "word" }); //sentence to word japonca vs desteklesin diye
+            const segmentedText = segmenter.segment(originalText);
+            const words = [...segmentedText]
+              .filter((s) => s.isWordLike)
+              .map((s) => s.segment.trim());
+
+            console.log(element.textContent);
+
+            if (words.length > 1) splitSentence(element);
+            else clearInterval(intervalId);
+          }, 1000);
           // Burada istediğiniz işlemleri gerçekleştirin
         }
         if (element.classList && element.classList.contains("youtube-caption-word")) {
@@ -386,9 +402,12 @@ const videoElement = document.querySelector(".html5-main-video");
 
 videoElement?.addEventListener("pause", function () {
   splitSentence(mutatedElement);
+  clearInterval(intervalIdd);
 });
 
-//dil değiştirme
+function startInterval() {}
+
+//////////////////////////////////////////////////////////////////////////////dil değiştirme
 
 async function languageSelect(selectedLangCode) {
   // Dil seçimi için kullanılacak select elementini al
