@@ -191,7 +191,7 @@ var observer = new MutationObserver(function (mutations) {
 
             console.log(element.textContent);
 
-            if (words.length > 1) splitSentence(element);
+            if (words.length > 0) splitSentence(element);
             else clearInterval(intervalId);
           }, 1000);
           // Burada istediğiniz işlemleri gerçekleştirin
