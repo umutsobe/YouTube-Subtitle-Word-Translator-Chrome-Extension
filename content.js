@@ -1,18 +1,154 @@
 // sayfa içeriği manipulasyonu
 // content.js
-
-import languageCodes from "./languagesCodes.js";
+const languageCodes = {
+  af: "Afrikaans",
+  sq: "Albanian",
+  am: "Amharic",
+  ar: "Arabic",
+  hy: "Armenian",
+  as: "Assamese",
+  ay: "Aymara",
+  az: "Azerbaijani",
+  bm: "Bambara",
+  eu: "Basque",
+  be: "Belarusian",
+  bn: "Bengali",
+  bho: "Bhojpuri",
+  bs: "Bosnian",
+  bg: "Bulgarian",
+  ca: "Catalan",
+  ceb: "Cebuano",
+  "zh-CN": "Chinese (Simplified)",
+  "zh-TW": "Chinese (Traditional)",
+  co: "Corsican",
+  hr: "Croatian",
+  cs: "Czech",
+  da: "Danish",
+  dv: "Dhivehi",
+  doi: "Dogri",
+  nl: "Dutch",
+  en: "English",
+  eo: "Esperanto",
+  et: "Estonian",
+  ee: "Ewe",
+  fil: "Filipino (Tagalog)",
+  fi: "Finnish",
+  fr: "French",
+  fy: "Frisian",
+  gl: "Galician",
+  ka: "Georgian",
+  de: "German",
+  el: "Greek",
+  gn: "Guarani",
+  gu: "Gujarati",
+  ht: "Haitian Creole",
+  ha: "Hausa",
+  haw: "Hawaiian",
+  he: "Hebrew",
+  hi: "Hindi",
+  hmn: "Hmong",
+  hu: "Hungarian",
+  is: "Icelandic",
+  ig: "Igbo",
+  ilo: "Ilocano",
+  id: "Indonesian",
+  ga: "Irish",
+  it: "Italian",
+  ja: "Japanese",
+  jv: "Javanese",
+  kn: "Kannada",
+  kk: "Kazakh",
+  km: "Khmer",
+  rw: "Kinyarwanda",
+  gom: "Konkani",
+  ko: "Korean",
+  kri: "Krio",
+  ku: "Kurdish",
+  ckb: "Kurdish (Sorani)",
+  ky: "Kyrgyz",
+  lo: "Lao",
+  la: "Latin",
+  lv: "Latvian",
+  ln: "Lingala",
+  lt: "Lithuanian",
+  lg: "Luganda",
+  lb: "Luxembourgish",
+  mk: "Macedonian",
+  mai: "Maithili",
+  mg: "Malagasy",
+  ms: "Malay",
+  ml: "Malayalam",
+  mt: "Maltese",
+  mi: "Maori",
+  mr: "Marathi",
+  "mni-Mtei": "Meiteilon (Manipuri)",
+  lus: "Mizo",
+  mn: "Mongolian",
+  my: "Myanmar (Burmese)",
+  ne: "Nepali",
+  no: "Norwegian",
+  ny: "Nyanja (Chichewa)",
+  or: "Odia (Oriya)",
+  om: "Oromo",
+  ps: "Pashto",
+  fa: "Persian",
+  pl: "Polish",
+  pt: "Portuguese (Portugal, Brazil)",
+  pa: "Punjabi",
+  qu: "Quechua",
+  ro: "Romanian",
+  ru: "Russian",
+  sm: "Samoan",
+  sa: "Sanskrit",
+  gd: "Scots Gaelic",
+  nso: "Sepedi",
+  sr: "Serbian",
+  st: "Sesotho",
+  sn: "Shona",
+  sd: "Sindhi",
+  si: "Sinhala (Sinhalese)",
+  sk: "Slovak",
+  sl: "Slovenian",
+  so: "Somali",
+  es: "Spanish",
+  su: "Sundanese",
+  sw: "Swahili",
+  sv: "Swedish",
+  tl: "Tagalog (Filipino)",
+  tg: "Tajik",
+  ta: "Tamil",
+  tt: "Tatar",
+  te: "Telugu",
+  th: "Thai",
+  ti: "Tigrinya",
+  ts: "Tsonga",
+  tr: "Turkish",
+  tk: "Turkmen",
+  ak: "Twi (Akan)",
+  uk: "Ukrainian",
+  ur: "Urdu",
+  ug: "Uyghur",
+  uz: "Uzbek",
+  vi: "Vietnamese",
+  cy: "Welsh",
+  xh: "Xhosa",
+  yi: "Yiddish",
+  yo: "Yoruba",
+  zu: "Zulu",
+};
 
 let mutatedElement; //mutosyona uğrayan element. bazen cümle ayrışmıyor. videoyu durdurunca ayrıştırmak için
-let popup; // Popup elementini saklamak için bir değişken
-let selectedElement; // element dışında bir yere tıklanınca popup kapansın diye
+let popupElement; // element dışında bir yere tıklanınca popup kapansın diye
 let targetLang;
+let activeWordElement;
 
 chrome.storage.sync.get("targetLang", function (result) {
   targetLang = result.targetLang; // varsayılan değeri belirle
 
   // targetLang değerini kullan
   console.log("Hedef dil: " + targetLang);
+
+  // languageSelect(targetLang);
 });
 
 function splitSentence(element) {
@@ -40,7 +176,6 @@ var observer = new MutationObserver(function (mutations) {
     if (mutation.addedNodes) {
       mutation.addedNodes.forEach(async function (element) {
         if (element.classList && element.classList.contains("ytp-caption-segment")) {
-          console.log(element);
           splitSentence(element);
           mutatedElement = element;
           // Burada istediğiniz işlemleri gerçekleştirin
@@ -75,6 +210,7 @@ function translateAndCreatePopup(spanElement) {
 }
 
 async function createPopup(element) {
+  activeWordElement = element;
   let word = element.textContent;
 
   element.addEventListener("click", async function () {
@@ -98,6 +234,23 @@ async function createPopup(element) {
 
       popup.innerHTML = /*html*/ `
             <style>
+              .form-select {
+                display: block;
+                width: 100px;
+                padding: 0.375rem 0.75rem 0.375rem 2.25rem;
+                font-size: 14px;
+                font-weight: 600;
+                color: rgb(40, 193, 193);
+                background-color: #083544;
+                padding: 2px 5px;
+                margin-bottom: 3px;
+                background-repeat: no-repeat;
+                background-position: left 0.75rem center;
+                background-size: 16px 12px;
+                border: 1px solid black;
+                border-radius: 5px;
+                transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+              }
               .lds-ring {
                 display: inline-block;
                 position: relative;
@@ -149,15 +302,20 @@ async function createPopup(element) {
                 <div></div>
               </div>
             </div>
-          <div id="detecdedLang" style="font-size: 13px; color: rgb(40, 193, 193)"></div>
-          <div id="sobeOriginalWord" style="font-size: 15px; margin-bottom: 10px"></div>
-          <div id="targetLang" style="font-size: 13px; color: rgb(40, 193, 193)"></div>
+          <div id="detecdedLang" style="font-size: 14px; color: rgb(40, 193, 193)"></div>
+          <div id="sobeOriginalWord" style="font-size: 16px; margin-bottom: 8px"></div>
+          <div style="display: flex">
+            <div style="font-size: 14px; color: rgb(40, 193, 193); margin-right: 8px; margin-top: 2px">
+              Target:
+            </div>
+            <select class="form-select" id="targetLang"></select>
+          </div>
           <div id="sobeTranslated" style="font-size: 16px; margin-bottom: 10px"></div>
           <div id="otherMeanings" style="font-size: 14px; color: bisque"></div>
             `;
 
       document.body.appendChild(popup);
-      selectedElement = popup;
+      popupElement = popup;
 
       const exitButton = document.getElementById("sobeTranslateExitButton");
 
@@ -182,6 +340,8 @@ async function createPopup(element) {
 
       document.querySelector(".sobeSpinner").innerHTML = ""; //delete spinner ring
 
+      languageSelect(targetLang);
+
       // Sayfa üzerine başka bir tıklandığında popup'ı kapat
       document.addEventListener("click", closePopupHandler);
     }
@@ -190,7 +350,7 @@ async function createPopup(element) {
 
 function closePopupHandler(event) {
   // Popup dışında bir yere tıklandığında popup'ı kapat
-  if (popup && !popup.contains(event.target) && event.target !== selectedElement) {
+  if (popup && !popup.contains(event.target) && event.target !== popupElement) {
     popup.remove();
     document.removeEventListener("click", closePopupHandler);
   }
@@ -227,3 +387,39 @@ const videoElement = document.querySelector(".html5-main-video");
 videoElement?.addEventListener("pause", function () {
   splitSentence(mutatedElement);
 });
+
+//dil değiştirme
+
+async function languageSelect(selectedLangCode) {
+  // Dil seçimi için kullanılacak select elementini al
+  const languageSelect = document.getElementById("targetLang");
+
+  // Dil kodları üzerinde dönerek select elementini doldur
+  for (const code in languageCodes) {
+    const option = document.createElement("option");
+    option.value = code;
+    option.text = languageCodes[code];
+    languageSelect.add(option);
+
+    // Seçili dil kodunu belirle
+    if (code === selectedLangCode) {
+      option.selected = true;
+    }
+  }
+
+  // Kullanıcının dil seçimini dinle ve storage'a kaydet
+  languageSelect.addEventListener("change", async function () {
+    const selectedLangCode = languageSelect.value;
+
+    targetLang = selectedLangCode;
+    activeWordElement.click();
+    setTimeout(() => {
+      activeWordElement.click(); //selectbox change durumunda popup açılıp kapansın diye
+    }, 100);
+
+    // Seçilen dil kodunu storage'da kaydet
+    chrome.storage.sync.set({ targetLang: selectedLangCode }, function () {
+      console.log("Hedef dil güncellendi: " + selectedLangCode);
+    });
+  });
+}
