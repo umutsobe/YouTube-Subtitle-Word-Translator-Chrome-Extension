@@ -1,5 +1,3 @@
-// sayfa içeriği manipulasyonu
-// content.js
 const languageCodes = {
   af: "Afrikaans",
   sq: "Albanian",
@@ -137,18 +135,14 @@ const languageCodes = {
   zu: "Zulu",
 };
 
-let mutatedElement; //mutosyona uğrayan element. bazen cümle ayrışmıyor. videoyu durdurunca ayrıştırmak için
-let popupElement; // element dışında bir yere tıklanınca popup kapansın diye
+let popupElement; // To close the popup when clicking outside the element.
 let targetLang;
 let activeWordElement;
 
 chrome.storage.sync.get("targetLang", function (result) {
-  targetLang = result.targetLang; // varsayılan değeri belirle
+  targetLang = result.targetLang;
 
-  // targetLang değerini kullan
   console.log("Hedef dil: " + targetLang);
-
-  // languageSelect(targetLang);
 });
 
 function splitSentence(element) {
@@ -162,17 +156,14 @@ function splitSentence(element) {
 
   if (notSplittedContent.length > 0) {
     const originalText = notSplittedContent;
-    const segmenter = new Intl.Segmenter([], { granularity: "word" }); //sentence to word japonca vs desteklesin diye
+    const segmenter = new Intl.Segmenter([], { granularity: "word" }); //sentence to word japanese vs support
     const segmentedText = segmenter.segment(originalText);
     const words = [...segmentedText].filter((s) => s.isWordLike).map((s) => s.segment.trim());
-
-    // element.innerHTML = "";
 
     words.forEach(function (word, index) {
       var spanElement = document.createElement("span");
       spanElement.style.cursor = "auto";
       spanElement.classList.add("ytp-caption-word");
-      // spanElement.textContent = index === 0 ? word : " " + word; //ilk kelime ise başına boşluk gelmesin
       spanElement.textContent = word + " ";
       element.appendChild(spanElement);
       translateAndCreatePopup(spanElement);
@@ -192,29 +183,6 @@ setInterval(() => {
     });
   }
 }, 1);
-
-// var observer = new MutationObserver(function (mutations) {
-//   mutations.forEach(function (mutation) {
-//     if (mutation.addedNodes) {
-//       mutation.addedNodes.forEach(async function (element) {
-//         if (element.classList && element.classList.contains("ytp-caption-segment")) {
-//           splitSentence(element);
-//           mutatedElement = element;
-//         }
-//         if (element.classList && element.classList.contains("youtube-caption-word")) {
-//           if (element.textContent == " ") element.textContent = "";
-//         }
-//       });
-//     }
-//   });
-// });
-
-// var targetNode = document.body;
-// var config = {
-//   childList: true,
-//   subtree: true,
-// };
-// observer.observe(targetNode, config);
 
 function translateAndCreatePopup(spanElement) {
   spanElement.addEventListener("mouseover", function () {
@@ -236,7 +204,6 @@ async function createPopup(element) {
 
   element.addEventListener("click", async function () {
     var rect = element.getBoundingClientRect();
-    // console.log(rect.top, rect.right, rect.bottom, rect.left, rect.width, rect.height);
 
     if (!document.getElementById("sobeTranslate")) {
       popup = document.createElement("div");
@@ -340,7 +307,7 @@ async function createPopup(element) {
 
       const exitButton = document.getElementById("sobeTranslateExitButton");
 
-      //exit tıklandığında kapat
+      //Close when exit is clicked.
       exitButton.addEventListener("click", function () {
         popup.remove();
         exitButton.removeEventListener("click", this);
@@ -370,7 +337,6 @@ async function createPopup(element) {
 }
 
 function closePopupHandler(event) {
-  // Popup dışında bir yere tıklandığında popup'ı kapat
   if (popup && !popup.contains(event.target) && event.target !== popupElement) {
     popup.remove();
     document.removeEventListener("click", closePopupHandler);
@@ -398,49 +364,38 @@ async function translateWord(word) {
       otherMeanings: otherMeanings,
     };
   } catch (error) {
-    console.error("Hata:", error);
-    return "error";
+    console.error("Error:", error);
+    return "ERROR";
   }
 }
-
-const videoElement = document.querySelector(".html5-main-video");
-
-videoElement?.addEventListener("pause", function () {
-  // splitSentence(mutatedElement);
-});
 
 function startInterval() {}
 
 //////////////////////////////////////////////////////////////////////////////dil değiştirme
 
 async function languageSelect(selectedLangCode) {
-  // Dil seçimi için kullanılacak select elementini al
   const languageSelect = document.getElementById("targetLang");
 
-  // Dil kodları üzerinde dönerek select elementini doldur
   for (const code in languageCodes) {
     const option = document.createElement("option");
     option.value = code;
     option.text = languageCodes[code];
     languageSelect.add(option);
 
-    // Seçili dil kodunu belirle
     if (code === selectedLangCode) {
       option.selected = true;
     }
   }
 
-  // Kullanıcının dil seçimini dinle ve storage'a kaydet
   languageSelect.addEventListener("change", async function () {
     const selectedLangCode = languageSelect.value;
 
     targetLang = selectedLangCode;
     activeWordElement.click();
     setTimeout(() => {
-      activeWordElement.click(); //selectbox change durumunda popup açılıp kapansın diye
+      activeWordElement.click(); //To open and close the popup when the select box changes
     }, 100);
 
-    // Seçilen dil kodunu storage'da kaydet
     chrome.storage.sync.set({ targetLang: selectedLangCode }, function () {
       console.log("Hedef dil güncellendi: " + selectedLangCode);
     });

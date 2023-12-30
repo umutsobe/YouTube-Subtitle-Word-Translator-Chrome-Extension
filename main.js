@@ -137,46 +137,37 @@ var languageCodes = {
 
 let targetLang;
 
-// chrome.storage.sync.get fonksiyonu asenkron olduğu için içindeki işlemleri bir fonksiyon içine alın
 function updateLanguageSelect(selectedLangCode) {
-  // Dil seçimi için kullanılacak select elementini al
   const languageSelect = document.getElementById("languageSelect");
 
-  // Dil kodları üzerinde dönerek select elementini doldur
   for (const code in languageCodes) {
     const option = document.createElement("option");
     option.value = code;
     option.text = languageCodes[code];
     languageSelect.add(option);
 
-    // Seçili dil kodunu belirle
     if (code === selectedLangCode) {
       option.selected = true;
     }
   }
 
-  // Kullanıcının dil seçimini dinle ve storage'a kaydet
   languageSelect.addEventListener("change", function () {
     const selectedLangCode = languageSelect.value;
 
-    // Seçilen dil kodunu storage'da kaydet
     chrome.storage.sync.set({ targetLang: selectedLangCode }, function () {
       console.log("Hedef dil güncellendi: " + selectedLangCode);
     });
   });
 }
 
-// chrome.storage.sync.get fonksiyonunu kullanarak targetLang değerini al
 chrome.storage.sync.get("targetLang", function (result) {
   targetLang = result.targetLang;
 
-  // Aldığınız targetLang değeriyle languageSelect'i güncelle
   updateLanguageSelect(targetLang);
 });
 
 const reloadButton = document.getElementById("reloadButton");
 
-// Butona tıklandığında sayfayı yeniden yükle
 reloadButton.addEventListener("click", function () {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     const currentTab = tabs[0];

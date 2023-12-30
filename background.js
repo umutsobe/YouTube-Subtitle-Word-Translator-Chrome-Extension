@@ -139,7 +139,7 @@ const chrome_language = chrome.i18n.getUILanguage();
 
 let defaultLang = languageCodes[chrome_language] ? chrome_language : "en";
 
-// Extension ilk yüklendiğinde storage'ı güncelle
+// Update the storage when the extension is first installed.
 chrome.runtime.onInstalled.addListener(function () {
   chrome.storage.sync.set({ targetLang: defaultLang });
 });
