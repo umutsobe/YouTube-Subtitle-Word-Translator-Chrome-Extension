@@ -141,7 +141,6 @@ let mutatedElement; //mutosyona uğrayan element. bazen cümle ayrışmıyor. vi
 let popupElement; // element dışında bir yere tıklanınca popup kapansın diye
 let targetLang;
 let activeWordElement;
-let intervalIdd;
 
 chrome.storage.sync.get("targetLang", function (result) {
   targetLang = result.targetLang; // varsayılan değeri belirle
@@ -153,63 +152,69 @@ chrome.storage.sync.get("targetLang", function (result) {
 });
 
 function splitSentence(element) {
-  if (element?.textContent) {
-    const originalText = element.textContent;
+  let notSplittedContent = "";
+  element.childNodes.forEach((spanOrText) => {
+    if (spanOrText.nodeName == "#text") {
+      notSplittedContent += spanOrText.textContent + " ";
+      spanOrText.textContent = "";
+    }
+  });
+
+  if (notSplittedContent.length > 0) {
+    const originalText = notSplittedContent;
     const segmenter = new Intl.Segmenter([], { granularity: "word" }); //sentence to word japonca vs desteklesin diye
     const segmentedText = segmenter.segment(originalText);
     const words = [...segmentedText].filter((s) => s.isWordLike).map((s) => s.segment.trim());
 
-    element.innerHTML = "";
+    // element.innerHTML = "";
 
-    words.forEach(function (word) {
+    words.forEach(function (word, index) {
       var spanElement = document.createElement("span");
       spanElement.style.cursor = "auto";
       spanElement.classList.add("ytp-caption-word");
-      spanElement.textContent = " " + word;
+      // spanElement.textContent = index === 0 ? word : " " + word; //ilk kelime ise başına boşluk gelmesin
+      spanElement.textContent = word + " ";
       element.appendChild(spanElement);
       translateAndCreatePopup(spanElement);
     });
   }
 }
 
-var observer = new MutationObserver(function (mutations) {
-  mutations.forEach(function (mutation) {
-    if (mutation.addedNodes) {
-      mutation.addedNodes.forEach(async function (element) {
-        if (element.classList && element.classList.contains("ytp-caption-segment")) {
+setInterval(() => {
+  const elements = document.querySelectorAll(".ytp-caption-segment");
+  if (elements) {
+    elements.forEach((element) => {
+      element.childNodes.forEach((spanOrText) => {
+        if (spanOrText.nodeName == "#text") {
           splitSentence(element);
-          mutatedElement = element;
-          const intervalId = setInterval(() => {
-            intervalIdd = intervalId;
-
-            const originalText = element.textContent;
-            const segmenter = new Intl.Segmenter([], { granularity: "word" }); //sentence to word japonca vs desteklesin diye
-            const segmentedText = segmenter.segment(originalText);
-            const words = [...segmentedText]
-              .filter((s) => s.isWordLike)
-              .map((s) => s.segment.trim());
-
-            console.log(element.textContent);
-
-            if (words.length > 0) splitSentence(element);
-            else clearInterval(intervalId);
-          }, 1000);
-          // Burada istediğiniz işlemleri gerçekleştirin
-        }
-        if (element.classList && element.classList.contains("youtube-caption-word")) {
-          if (element.textContent == " ") element.textContent = "";
         }
       });
-    }
-  });
-});
+    });
+  }
+}, 1);
 
-var targetNode = document.body;
-var config = {
-  childList: true,
-  subtree: true,
-};
-observer.observe(targetNode, config);
+// var observer = new MutationObserver(function (mutations) {
+//   mutations.forEach(function (mutation) {
+//     if (mutation.addedNodes) {
+//       mutation.addedNodes.forEach(async function (element) {
+//         if (element.classList && element.classList.contains("ytp-caption-segment")) {
+//           splitSentence(element);
+//           mutatedElement = element;
+//         }
+//         if (element.classList && element.classList.contains("youtube-caption-word")) {
+//           if (element.textContent == " ") element.textContent = "";
+//         }
+//       });
+//     }
+//   });
+// });
+
+// var targetNode = document.body;
+// var config = {
+//   childList: true,
+//   subtree: true,
+// };
+// observer.observe(targetNode, config);
 
 function translateAndCreatePopup(spanElement) {
   spanElement.addEventListener("mouseover", function () {
@@ -401,8 +406,7 @@ async function translateWord(word) {
 const videoElement = document.querySelector(".html5-main-video");
 
 videoElement?.addEventListener("pause", function () {
-  splitSentence(mutatedElement);
-  clearInterval(intervalIdd);
+  // splitSentence(mutatedElement);
 });
 
 function startInterval() {}
