@@ -3,7 +3,7 @@
   "name": "YouTube Subtitle Word Translator",
   "version": "1.0.3",
   "description": "Open English or other language subtitles on YouTube, find unfamiliar words? Click, translate to your chosen language.",
-  "permissions": ["storage", "activeTab"],
+  "permissions": ["storage"],
   "background": {
     "service_worker": "background.js",
     "type": "module"
@@ -12,7 +12,7 @@
     "128": "icon.png"
   },
   "action": {
-    "default_popup": "index.html"
+    "default_popup": "popup.html"
   },
   "content_scripts": [
     {
